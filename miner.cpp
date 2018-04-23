@@ -1,4 +1,3 @@
-//#include "rijndael.c"
 #include <string>
 #include <stdlib.h>
 #include <stdio.h>
@@ -6,7 +5,6 @@
 #include <time.h>
 #include <unistd.h>
 #include <vector>
-#include <sqlite3.h>
 #include <iostream> 
 #include <math.h>
 #include "json.hpp"
@@ -23,31 +21,32 @@ static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *use
     return size * nmemb;
 }
 
-unsigned char* hash_to_hex(unsigned char* data){
-	unsigned char out_buf[20];
-	SHA1(data, strlen((char*)data), out_buf);
-	int i;
-    for (i = 0; i < 20; i++) {
-        printf("%02x ", out_buf[i]);
+string sha256(const string str)
+{
+    unsigned char hash[SHA256_DIGEST_LENGTH];
+    SHA256_CTX sha256;
+    SHA256_Init(&sha256);
+    SHA256_Update(&sha256, str.c_str(), str.size());
+    SHA256_Final(hash, &sha256);
+    stringstream ss;
+    for(int i = 0; i < SHA256_DIGEST_LENGTH; i++)
+    {
+        ss << hex << setw(2) << setfill('0') << (int)hash[i];
     }
-    printf("\n");
-
-    return out_buf;
+    return ss.str();
 }
 
-json make_block(json next_info, unsigned char* contents){
-	unsigned char* num_in = hash_to_hex(contents);
-
+json make_block(json next_info, const string contents){	
 	json block = {
         {"version", next_info["version"]},
         //for now, root is hash of block contents (team name)
-        {"root", 01010},
+        {"root", sha256(contents)},
         {"parentid", next_info["parentid"]},
         //nanoseconds since unix epoch
-        //time_t time = time(0); 
         {"timestamp", long(time(0)*1000*1000*1000)},
         {"difficulty", next_info["difficulty"]}
     };
+    cout << "root hash is " << block["root"] << endl;
     return block;
 }
 
@@ -75,19 +74,19 @@ json get_next(){
 
 int main() {
 
-	unsigned char* block_contents = (unsigned char*)"agnescam, prela, ampayne";
+	string block_contents = "agnescam, prela, ampayne";
 
     do{
         //   Next block's parent, version, difficulty
         json next_header = get_next();
         // Construct a block with our name in the contents that appends to the
         // head of the main chain
-        cout << "next header is" << next_header;
+        //cout << "next header is" << next_header;
         json new_block = make_block(next_header, block_contents);
         // //Solve the POW
-        // cout << "Solving block...";
-        // cout << new_block;
-        // solve_block(new_block);
+        cout << "Solving block...";
+        cout << new_block;
+        //solve_block(new_block);
         // //Send to the server
         // cout << "Contents:";
         // cout << new_block["root"];
