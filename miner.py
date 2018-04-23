@@ -120,8 +120,8 @@ def get_next():
            parentid        HexString
            version         single byte
     """
-    #return json.loads(urllib2.urlopen(NODE_URL + "/next").read())
-    return json.loads(urllib2.urlopen(NODE_URL + "/block/a6b8ef3b1d28145fd475904bd803f6d74fdc8551313194cc6aaa4d358216edb3").read())["header"]
+    return json.loads(urllib2.urlopen(NODE_URL + "/next").read())
+    #return json.loads(urllib2.urlopen(NODE_URL + "/block/a6b8ef3b1d28145fd475904bd803f6d74fdc8551313194cc6aaa4d358216edb3").read())["header"]
 
 def add_block(h, contents):
     """
